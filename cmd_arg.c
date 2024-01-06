@@ -152,7 +152,7 @@ E_cmd_arg_I_parse(
             {   case Z_arg_proc_ret_Z_accept:
                     break;
                 case Z_arg_proc_ret_Z_reject:
-                    E_cmd_arg_I_err( argc, argv );
+                    E_cmd_arg_I_err( argc + ( arg_param_count == 1 ? 1 : 0 ), argv );
                 case Z_arg_proc_ret_Z_ignore:
                     E_cmd_arg_I_ign( argc, argv );
             }
