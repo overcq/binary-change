@@ -3,7 +3,7 @@
 *  ¦OUX¦  C
 *  ¦/C+¦  commandline utility
 *   ---   binary change
-*         main
+*         binary write
 * ©overcq                on ‟Gentoo Linux 17.1” “x86_64”              2024‒1‒6 W
 *******************************************************************************/
 #include <errno.h>
@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "cmd_arg.h"
 //==============================================================================
 static bool verbose;
@@ -21,8 +22,8 @@ struct Z_file
   unsigned data_n;
   struct Z_file_data
   { size_t position;
-    bool little_endian;
-    unsigned short bits;
+    unsigned short little_endian;
+    unsigned short bytes;
     unsigned long value;
   } *data;
 } *files;
@@ -43,8 +44,8 @@ Z_file_data_M( void
     files[ files_n - 1 ].data = p;
     files[ files_n - 1 ].data_n++;
     files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].position = ~0;
-    files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].little_endian = true;
-    files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].bits = 8;
+    files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].little_endian = ~0;
+    files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].bytes = ~0;
     files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].value = ~0;
 }
 static
@@ -60,6 +61,22 @@ Z_file_M( void
     Z_file_data_M();
 }
 static
+bool
+Z_file_data_I_check( void
+){  return ~files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].position
+    && ~(short)files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].little_endian
+    && ~(short)files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].bytes
+    && ~files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].value;
+}
+static
+bool
+Z_file_data_I_check_init( void
+){  return ~files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].position
+    || ~(short)files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].little_endian
+    || ~(short)files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].bytes
+    || ~files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].value;
+}
+static
 enum Z_arg_proc_ret
 E_cmd_arg_I_proc(
   int switch_
@@ -68,7 +85,9 @@ E_cmd_arg_I_proc(
 , char *argv[]
 ){  switch( avail_arg_i )
     { case 0:
-        {   if( files[ files_n - 1 ].data_n == 1 )
+        {   if( files[ files_n - 1 ].data_n == 1
+            || Z_file_data_I_check_init()
+            )
                 return Z_arg_proc_ret_Z_reject;
             size_t l = strlen( argv[0] );
             files[ files_n - 1 ].pathname = ( char * )malloc( l + 1 );
@@ -85,7 +104,9 @@ E_cmd_arg_I_proc(
       case 1:
         {   char *ret;
             files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].position = strtoul( argv[0], &ret, 0 );
-            if( *ret )
+            if( *ret
+            || !Z_file_data_I_check()
+            )
                 return Z_arg_proc_ret_Z_reject;
             Z_file_data_M();
             break;
@@ -97,7 +118,7 @@ E_cmd_arg_I_proc(
             files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].little_endian = false;
             break;
       case 4:
-            files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].bits = strtoul( argv[0], 0, 0 );
+            files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].bytes = strtoul( argv[0], 0, 0 );
             break;
       case 5:
         {   char *ret;
@@ -122,11 +143,13 @@ main( int argc
     , "position", "p", false, false, true, 0, 0, "next data position"
     , "little-endian", "l", false, false, false, 0, 0, "next data as little-endian"
     , "big-endian", "b", false, false, false, 0, 0, "next data as big-endian"
-    , "data-size", "s", false, false, false, 3, ( const char *const [] ){ "16", "32", "64" }, "next data size in bits"
+    , "data-size", "s", false, false, false, 3, ( const char *const [] ){ "2", "4", "8" }, "next data size in bytes"
     , "data", "d", false, false, true, 0, 0, "data value"
     , "verbose", "v", true, false, false, 0, 0, "verbose operation"
     };
     E_cmd_arg_I_parse( argc, argv, E_cmd_arg_I_proc, sizeof( avail_args ) / sizeof( avail_args[0] ), avail_args );
+    if( Z_file_data_I_check_init() )
+        error( true, 0, "missed file in argument list" );
     void *p = realloc( files, --files_n * sizeof( struct Z_file ));
     if( !p
     && files_n
@@ -141,13 +164,13 @@ main( int argc
             error( true, errno, "unable to open file" );
         for( unsigned data_i = 0; data_i != files[ files_i ].data_n; data_i++ )
         {   if(verbose)
-                printf( "\tposition: %lu\n\tlittle_endian: %d\n\tbits: %u\n\tvalue: %lu\n", files[ files_i ].data[ data_i ].position, files[ files_i ].data[ data_i ].little_endian, files[ files_i ].data[ data_i ].bits, files[ files_i ].data[ data_i ].value );
+                printf( "\tposition: %lu\n\tlittle_endian: %u\n\tbytes: %u\n\tvalue: %lu\n", files[ files_i ].data[ data_i ].position, files[ files_i ].data[ data_i ].little_endian, files[ files_i ].data[ data_i ].bytes, files[ files_i ].data[ data_i ].value );
             if( !~lseek( fd, files[ files_i ].data[ data_i ].position, SEEK_SET ))
                 error( true, errno, "unable to seek in file" );
-            unsigned short bits = files[ files_i ].data[ data_i ].bits;
+            unsigned short bits = files[ files_i ].data[ data_i ].bytes * 8;
             unsigned long value = files[ files_i ].data[ data_i ].value;
             if( files[ files_i ].data[ data_i ].little_endian )
-                while( bits )
+                while(bits)
                 {   unsigned char c = value & 0xff;
                     if( write( fd, &c, 1 ) != 1 )
                         error( true, errno, "unable to write to file" );
@@ -155,7 +178,7 @@ main( int argc
                     bits -= 8;
                 }
             else
-                while( bits )
+                while(bits)
                 {   bits -= 8;
                     unsigned char c = ( value >> bits ) & 0xff;
                     if( write( fd, &c, 1 ) != 1 )
