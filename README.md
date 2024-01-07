@@ -7,7 +7,7 @@ Programs for reading and writing variables to a binary file:
 
 Available options after specifying the `-?` argument.
 
-W skrócie:
+In short:
 
 * `binary-read -f <pathname> -p <offset> [ -l | -b ] -s <bytes> ...`
 * `binary-write -f <pathname> -p <offset> [ -l | -b ] -s <bytes> -d <value> ...`
