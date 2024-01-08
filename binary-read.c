@@ -60,9 +60,16 @@ Z_file_M( void
 static
 bool
 Z_file_data_I_check( void
-){  return ~files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].position
-    && ~(short)files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].little_endian
+){  bool ret = ~files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].position
     && ~(short)files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].bytes;
+    if( ret
+    && !~(short)files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].little_endian
+    && files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].bytes == 1
+    )
+        files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].little_endian = true;
+    else
+        ret = ret && ~(short)files[ files_n - 1 ].data[ files[ files_n - 1 ].data_n - 1 ].little_endian;
+    return ret;
 }
 static
 bool
@@ -128,7 +135,7 @@ main( int argc
     , "position", "p", false, false, true, 0, 0, "next data position"
     , "little-endian", "l", false, false, false, 0, 0, "next data as little-endian"
     , "big-endian", "b", false, false, false, 0, 0, "next data as big-endian"
-    , "data-size", "s", false, false, false, 3, ( const char *const [] ){ "2", "4", "8" }, "next data size in bytes"
+    , "data-size", "s", false, false, false, 3, ( const char *const [] ){ "1", "2", "4", "8" }, "next data size in bytes"
     };
     E_cmd_arg_I_parse( argc, argv, E_cmd_arg_I_proc, sizeof( avail_args ) / sizeof( avail_args[0] ), avail_args );
     if( Z_file_data_I_check_init() )
