@@ -140,12 +140,13 @@ main( int argc
     E_cmd_arg_I_parse( argc, argv, E_cmd_arg_I_proc, sizeof( avail_args ) / sizeof( avail_args[0] ), avail_args );
     if( Z_file_data_I_check_init() )
         error( true, 0, "missed file in argument list" );
-    void *p = realloc( files, --files_n * sizeof( struct Z_file ));
-    if( !p
-    && files_n
-    )
-        mem_alloc_failed( __LINE__ );
-    files = p;
+    if( --files_n )
+    {   void *p = realloc( files, files_n * sizeof( struct Z_file ));
+        if( !p )
+            mem_alloc_failed( __LINE__ );
+        files = p;
+    }else
+        free(files);
     for( unsigned files_i = 0; files_i != files_n; files_i++ )
     {   int fd = open( files[ files_i ].pathname, O_RDONLY );
         if( !~fd )
