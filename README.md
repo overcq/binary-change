@@ -1,6 +1,6 @@
 # binary-change
 
-Programs for reading and writing variables to a binary file:
+Programs for reading and writing numerical values in binary files:
 
 * binary-read
 * binary-write
@@ -32,7 +32,9 @@ Detailed version in git log.
 
 ## 4. Purpose
 
-The product is intended for software development in unix-like systems.
+Reading and writing numerical values in binary files from command line.
+
+Can be used in Linux shell scripts.
 
 ## 5. Risk
 

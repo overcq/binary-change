@@ -6,7 +6,7 @@ _opRWTng-rwt=
 
 Command line parser
 ---------------------------------------
-Do zrobienia: czy przekazywać odczytane indeksy dozwolonych wartości, gdy “value_list” i nie ‟other_value”?
+TODO Czy przekazywać odczytane indeksy dozwolonych wartości, gdy “value_list” i nie ‟other_value”?
 ==================================== */
 #include "cmd_arg.h"
 //==============================================================================
